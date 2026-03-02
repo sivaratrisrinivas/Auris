@@ -10,42 +10,7 @@ import rateLimit from "express-rate-limit";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-async function generateLogoIfNeeded() {
-  const publicDir = path.join(process.cwd(), 'public');
-  const logoPath = path.join(publicDir, 'logo.png');
-  
-  if (!fs.existsSync(logoPath) && process.env.GEMINI_API_KEY) {
-    try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image',
-        contents: {
-          parts: [
-            { text: 'A minimalist, modern, abstract app icon for a medical AI app named Pulse. A sleek, glowing neon heartbeat line (EKG) morphing into a soundwave. Dark background, vibrant cyan and fuchsia colors. High quality, flat vector style, no text, clean, Apple design style.' }
-          ]
-        },
-        config: {
-          imageConfig: { aspectRatio: "1:1", imageSize: "512px" }
-        }
-      });
-
-      for (const part of response.candidates?.[0]?.content?.parts || []) {
-        if (part.inlineData) {
-          const base64Data = part.inlineData.data;
-          const buffer = Buffer.from(base64Data, 'base64');
-          if (!fs.existsSync(publicDir)) fs.mkdirSync(publicDir, { recursive: true });
-          fs.writeFileSync(logoPath, buffer);
-          break;
-        }
-      }
-    } catch (e) {
-      console.error('Error generating logo:', e);
-    }
-  }
-}
-
 async function startServer() {
-  await generateLogoIfNeeded();
   const app = express();
   const PORT = 3000;
 
